@@ -37,6 +37,11 @@ from atem_core.xml_mapping import (
 )
 from atem_core.commands import AudioOutputRoutingCommand, AudioRoutingOutputCommand
 from atem_core.discovery import discover_atems, local_subnet_prefixes as _local_subnet_prefixes
+from atem_core.node_bridge import (
+    send_node_aroc as _send_node_aroc,
+    send_node_status as _send_node_status,
+    node_port_alive as _node_port_alive,
+)
 
 def _get_attr(obj, *names):
     """Пытается получить атрибут по нескольким возможным именам"""
@@ -331,55 +336,6 @@ def set_routing(aux: int, pair: int, source: int):
         return True
     except Exception as e:
         st.error(f"Ошибка установки роутинга: {e}")
-        return False
-
-
-def _send_node_aroc(output_id: int, source_id: int, host: str, port: int) -> dict:
-    """Отправляет команду в node backend (JSONL)."""
-    payload = {"cmd": "set", "outputId": int(output_id), "sourceId": int(source_id)}
-    data = (json.dumps(payload) + "\n").encode("utf-8")
-    try:
-        with socket.create_connection((host, int(port)), timeout=6.0) as sock:
-            sock.sendall(data)
-            sock.settimeout(6.0)
-            buff = b""
-            while b"\n" not in buff:
-                chunk = sock.recv(4096)
-                if not chunk:
-                    break
-                buff += chunk
-        line = buff.split(b"\n")[0].decode("utf-8", errors="ignore").strip()
-        return json.loads(line) if line else {"ok": False, "error": "empty response"}
-    except Exception as e:
-        return {"ok": False, "error": str(e)}
-
-
-def _send_node_status(host: str, port: int) -> dict:
-    """Запрашивает статус у node backend."""
-    payload = {"cmd": "status"}
-    data = (json.dumps(payload) + "\n").encode("utf-8")
-    try:
-        with socket.create_connection((host, int(port)), timeout=6.0) as sock:
-            sock.sendall(data)
-            sock.settimeout(6.0)
-            buff = b""
-            while b"\n" not in buff:
-                chunk = sock.recv(4096)
-                if not chunk:
-                    break
-                buff += chunk
-        line = buff.split(b"\n")[0].decode("utf-8", errors="ignore").strip()
-        return json.loads(line) if line else {"ok": False, "error": "empty response"}
-    except Exception as e:
-        return {"ok": False, "error": str(e)}
-
-
-def _node_port_alive(host: str, port: int) -> bool:
-    """Проверяет, отвечает ли node backend на сокет (независимо от subprocess)."""
-    try:
-        with socket.create_connection((host, int(port)), timeout=1.0):
-            return True
-    except Exception:
         return False
 
 
