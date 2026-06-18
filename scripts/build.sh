@@ -3,11 +3,13 @@
 set -e
 cd "$(dirname "$0")/.."
 
-echo "==> Активируем venv..."
-source venv/bin/activate
-
 echo "==> PyInstaller сборка..."
-pyinstaller "ATEM Audio Routing.spec" --noconfirm
+# Вызываем PyInstaller через python модуль, а не через `source activate` +
+# `pyinstaller` на PATH: активация ломается, если venv был создан по другому
+# пути (relocation), а `python -m` использует относительный путь к интерпретатору.
+PY="venv/bin/python3"
+[ -x "$PY" ] || PY="venv/bin/python"
+"$PY" -m PyInstaller "ATEM Audio Routing.spec" --noconfirm
 
 APP="dist/ATEM Audio Routing.app"
 FRAMEWORKS="$APP/Contents/Frameworks"

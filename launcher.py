@@ -111,6 +111,12 @@ def main() -> None:
     }
     try:
         logging.info("Starting Streamlit bootstrap")
+        # Streamlit >=1.5x no longer applies flag_options inside bootstrap.run()
+        # (the `streamlit run` CLI does it before calling run). Since we call
+        # bootstrap.run() directly, apply them ourselves or the configured port,
+        # headless mode, etc. are ignored and the server falls back to :8501.
+        if hasattr(bootstrap, "load_config_options"):
+            bootstrap.load_config_options(flag_options=flag_options)
         bootstrap.run(app_path, False, [], flag_options)
         logging.info("Streamlit bootstrap finished")
     except SystemExit as e:
