@@ -1,5 +1,5 @@
 {
-  "name": "atem_sound_routing",
+  "name": "atem_audio_routing",
   "version": "1.0.0",
   "description": "Визуализация роутинга аудио в ATEM микшере через TCP (как в Bitfocus Companion).",
   "main": "index.js",
