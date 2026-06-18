@@ -1,0 +1,47 @@
+# Virtual Environment
+venv/
+env/
+ENV/
+.venv
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Node
+node_modules/
+
+# Build artifacts
+build/
+dist/
+*.spec.bak
+
+# Bundled Node.js runtime (161MB — fetch/build separately, see README)
+tools/node_runtime/
+
+# Logs
+*.log
+node_backend.log
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Local AI tooling runtime / databases (not project code)
+.claude/
+.swarm/
+.claude-flow/
+ruvector.db
+
+# Stray ATEM exports
+2 2025-12-23 16-48-44.xml
