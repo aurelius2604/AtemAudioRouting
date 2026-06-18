@@ -1,0 +1,17 @@
+[tool.pytest.ini_options]
+# atem_core lives at the repo root (next to atem_gui.py); make it importable.
+pythonpath = ["."]
+testpaths = ["tests"]
+markers = [
+    "unit: fast, isolated unit tests",
+    "integration: tests that touch external systems (ATEM, network)",
+]
+
+[tool.ruff]
+# Lint only the extracted, tested core + tests for now.
+# atem_gui.py / launcher.py are legacy and excluded until refactored.
+include = ["atem_core/**/*.py", "tests/**/*.py"]
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W"]

@@ -28,6 +28,15 @@ hiddenimports = [
     'zeroconf._utils.net',
     'ifaddr',
     'concurrent.futures',
+    # atem_core: imported by atem_gui.py at runtime (atem_gui.py is bundled as a
+    # data file, so PyInstaller does not follow its imports — list them here).
+    'atem_core',
+    'atem_core.constants',
+    'atem_core.encoding',
+    'atem_core.config',
+    'atem_core.routing',
+    'atem_core.xml_mapping',
+    'atem_core.commands',
 ]
 
 tmp_ret = collect_all('streamlit')
@@ -39,7 +48,7 @@ datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
 
 a = Analysis(
     ['launcher.py'],
-    pathex=[],
+    pathex=['.'],
     binaries=binaries,
     datas=datas,
     hiddenimports=hiddenimports,
