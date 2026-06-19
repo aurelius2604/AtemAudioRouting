@@ -52,7 +52,26 @@ bash scripts/build.sh
 Требования для сборки:
 - `venv/` с `pyinstaller` и зависимостями
 - `node_modules/` (`npm install`)
-- `tools/node_runtime/` — бандлированный Node.js runtime (уже в репо)
+- `tools/node_runtime/` — бандлированный Node.js runtime (**не** в репо, см. `.gitignore`; должен лежать локально)
+
+## Установка на другой Mac
+
+Приложение подписано ad-hoc (без Apple Developer ID), поэтому на чужом Mac
+macOS сначала заблокирует его как «из неизвестного источника».
+
+1. Упаковать сборку в один файл для переноса:
+   ```bash
+   ditto -c -k --keepParent "dist/ATEM Audio Routing.app" "dist/ATEM-Audio-Routing-macOS.zip"
+   ```
+2. Перенести `ATEM-Audio-Routing-macOS.zip` на целевой Mac (AirDrop / флешка / облако), распаковать,
+   перетащить `ATEM Audio Routing.app` в `/Applications`.
+3. Снять карантин один раз (иначе будет «повреждено / не открывается»):
+   ```bash
+   xattr -dr com.apple.quarantine "/Applications/ATEM Audio Routing.app"
+   ```
+   Либо: правый клик по `.app` → **Открыть** → в диалоге снова **Открыть**.
+
+Для распространения без этого шага нужен платный Apple Developer ID + нотаризация.
 
 ## Структура
 
