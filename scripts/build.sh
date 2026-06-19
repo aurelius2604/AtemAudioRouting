@@ -18,5 +18,10 @@ echo "==> Копируем node_modules в .app..."
 # rsync корректно обрабатывает вложенные node_modules и symlinks
 rsync -a --delete node_modules/ "$FRAMEWORKS/node_modules/"
 
+# Примечание: bundled node_modules ломает печать ad-hoc подписи PyInstaller, и
+# переподписать --deep нельзя (node_modules/.bin не является валидным bundle).
+# Приложение запускается без проблем; для переноса на другой Mac нужно один раз
+# снять карантин — см. README («Установка на другой Mac»).
+
 echo "==> Готово: $APP"
 echo "    Размер: $(du -sh "$APP" | cut -f1)"
