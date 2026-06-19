@@ -1,0 +1,65 @@
+name: Build Windows
+
+# Manual trigger (Actions tab -> Build Windows -> Run workflow) or on a version tag.
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt -r requirements-dev.txt
+
+      - name: Install Node dependencies
+        run: npm ci
+
+      - name: Download Windows Node.js runtime
+        run: pwsh scripts/download_node_win.ps1
+
+      - name: Build with PyInstaller
+        run: python -m PyInstaller "ATEM Audio Routing.spec" --noconfirm
+
+      - name: Bundle node_modules into the build
+        shell: pwsh
+        run: |
+          $appDir = "dist/ATEM Audio Routing"
+          $target = if (Test-Path "$appDir/_internal") { "$appDir/_internal/node_modules" } else { "$appDir/node_modules" }
+          Copy-Item -Path "node_modules" -Destination $target -Recurse -Force
+          Write-Host "node_modules copied to $target"
+
+      - name: Smoke check (exe exists)
+        shell: pwsh
+        run: |
+          $exe = "dist/ATEM Audio Routing/ATEM Audio Routing.exe"
+          if (-not (Test-Path $exe)) { throw "Build artifact missing: $exe" }
+          Write-Host "OK: $exe"
+
+      - name: Zip the build
+        shell: pwsh
+        run: Compress-Archive -Path "dist/ATEM Audio Routing" -DestinationPath "ATEM-Audio-Routing-Windows.zip" -Force
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ATEM-Audio-Routing-Windows
+          path: ATEM-Audio-Routing-Windows.zip
+          retention-days: 30

@@ -1,3 +1,4 @@
-# Dev/test dependencies (not needed at runtime)
+# Dev/test/build dependencies (not needed at runtime)
 pytest>=8.0.0
 ruff>=0.6.0
+pyinstaller==6.17.0  # packaging the .app / .exe
