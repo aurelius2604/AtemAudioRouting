@@ -407,44 +407,128 @@ def _stop_node_backend() -> dict:
 
 
 # Streamlit UI
-st.set_page_config(page_title="ATEM Audio Routing", layout="wide")
+st.set_page_config(
+    page_title="ATEM Audio Routing",
+    page_icon="🎚️",
+    layout="wide",
+    initial_sidebar_state="expanded",
+)
 
 # Приглушаем логирование pyatem, чтобы не спамить retransmission в UI
 for name in ["AtemProtocol", "UdpTransport", "TcpTransport"]:
     logging.getLogger(name).setLevel(logging.CRITICAL)
 
-st.title("🎚️ ATEM Audio Routing Manager")
-
-# Немного увеличиваем высоту и шрифт у выпадающих списков, чтобы было удобнее читать
+# --- Control-surface theme (dark, broadcast-style) -------------------------
 st.markdown(
     """
     <style>
-    div[data-testid="stHorizontalBlock"] {
-        overflow-x: auto;
+    :root {
+        --bg: #0b0f14; --surface: #151b23; --surface-2: #1b232d;
+        --border: #283543; --text: #e6edf3; --muted: #8b98a8;
+        --accent: #38bdf8; --good: #34d399; --bad: #f87171; --warn: #fbbf24;
     }
-    div[data-baseweb="select"] {
-        min-width: 150px;
-        width: 100%;
+    .stApp {
+        background: radial-gradient(1200px 600px at 82% -12%, #11212c 0%, var(--bg) 55%);
     }
-    div[data-baseweb="select"] > div {
-        min-height: 20px;
-        font-size: 14px;
+    header[data-testid="stHeader"] { background: transparent; }
+    section[data-testid="stSidebar"] {
+        background: var(--surface); border-right: 1px solid var(--border);
     }
-    div[data-baseweb="select"] input {
-        font-size: 14px;
+    section[data-testid="stSidebar"] h2 {
+        font-size: .78rem; text-transform: uppercase; letter-spacing: 2px;
+        color: var(--muted); font-weight: 700;
     }
-    div[data-baseweb="select"] span {
-        white-space: normal;
-        line-height: 1.2;
+
+    /* App header */
+    .app-header {
+        display: flex; align-items: center; justify-content: space-between;
+        gap: 16px; padding: 16px 20px; margin: 0 0 16px;
+        border: 1px solid var(--border); border-radius: 16px;
+        background: linear-gradient(180deg, var(--surface-2), var(--surface));
+        box-shadow: 0 12px 30px -18px #000;
     }
-    .pair-label {
+    .app-title {
+        display: flex; align-items: center; gap: 12px;
+        font-size: 1.5rem; font-weight: 700; letter-spacing: .3px; color: var(--text);
+    }
+    .app-logo { font-size: 1.55rem; }
+    .app-sub {
+        font-size: .68rem; text-transform: uppercase; letter-spacing: 2px;
+        color: var(--muted); font-weight: 600;
+        border-left: 1px solid var(--border); padding-left: 12px;
+    }
+    .status-pill {
+        font-size: .72rem; font-weight: 700; letter-spacing: 1.2px;
+        padding: 8px 16px; border-radius: 999px; border: 1px solid var(--border);
         white-space: nowrap;
-        display: inline-block;
-        margin-left: -10px;
     }
+    .status-pill.ok {
+        color: #05291d; background: var(--good);
+        box-shadow: 0 0 18px -3px var(--good);
+    }
+    .status-pill.off { color: var(--muted); background: var(--surface-2); }
+
+    /* Inputs & buttons */
+    div[data-baseweb="select"] > div, .stTextInput input, .stNumberInput input {
+        background: var(--surface-2) !important; border-color: var(--border) !important;
+        border-radius: 10px !important;
+    }
+    .stButton > button {
+        border-radius: 10px; border: 1px solid var(--border);
+        background: var(--surface-2); color: var(--text); font-weight: 600;
+        transition: border-color .15s ease, color .15s ease, transform .12s ease;
+    }
+    .stButton > button:hover {
+        border-color: var(--accent); color: var(--accent); transform: translateY(-1px);
+    }
+    .stButton > button[kind="primary"] {
+        background: var(--accent); color: #04222e; border-color: var(--accent);
+    }
+
+    /* Routing assignment cards */
+    .assign-card {
+        border: 1px solid var(--border); border-left: 3px solid var(--accent);
+        background: var(--surface); border-radius: 10px;
+        padding: 9px 14px; margin: 7px 0; color: var(--text);
+    }
+    .assign-card .aux { color: var(--accent); font-weight: 700; }
+
+    /* Onboarding hero */
+    .hero {
+        border: 1px solid var(--border); border-radius: 16px; padding: 26px 28px;
+        background: linear-gradient(180deg, var(--surface-2), var(--surface));
+        color: var(--text);
+    }
+    .hero h3 { margin-top: 0; color: var(--text); }
+    .hero ol { color: var(--muted); line-height: 1.9; margin: 0; padding-left: 20px; }
+
+    /* --- Matrix layout (functional — keep) --- */
+    div[data-testid="stHorizontalBlock"] { overflow-x: auto; }
+    div[data-baseweb="select"] { min-width: 150px; width: 100%; }
+    div[data-baseweb="select"] > div { min-height: 20px; font-size: 14px; }
+    div[data-baseweb="select"] input { font-size: 14px; }
+    div[data-baseweb="select"] span { white-space: normal; line-height: 1.2; }
+    .pair-label { white-space: nowrap; display: inline-block; margin-left: -10px; color: var(--muted); }
     </style>
     """,
     unsafe_allow_html=True
+)
+
+# App header with live connection status
+_hdr_connected = st.session_state.get("connected", False)
+st.markdown(
+    f"""
+    <div class="app-header">
+      <div class="app-title">
+        <span class="app-logo">🎚️</span> ATEM Audio Routing
+        <span class="app-sub">Fairlight&nbsp;AUX&nbsp;matrix</span>
+      </div>
+      <div class="status-pill {'ok' if _hdr_connected else 'off'}">
+        {'● ПОДКЛЮЧЕНО' if _hdr_connected else '○ НЕ ПОДКЛЮЧЕНО'}
+      </div>
+    </div>
+    """,
+    unsafe_allow_html=True,
 )
 
 # Боковая панель для подключения
@@ -478,7 +562,7 @@ with st.sidebar:
     )
     st.checkbox("Node backend (AROC)", key="node_backend_enabled")
     st.text_input("Node host", key="node_host")
-    st.number_input("Node port", min_value=1, max_value=65535, step=1, value=int(st.session_state.node_port), key="node_port")
+    st.number_input("Node port", min_value=1, max_value=65535, step=1, key="node_port")
     st.checkbox("Автозапуск backend", key="node_backend_autostart")
     if st.button("Запустить backend"):
         res = _start_node_backend(st.session_state.get("atem_ip", "127.0.0.1"), st.session_state.node_port)
@@ -664,16 +748,27 @@ if st.session_state.connected:
                     rows.append(f"{pair_label} → {src_label}")
             if rows:
                 aux_label = state.aux_output_names.get(aux, f"AUX {aux}")
-                st.markdown(f"**{aux_label}:** " + "; ".join(rows))
+                st.markdown(
+                    f'<div class="assign-card"><span class="aux">{aux_label}</span> &nbsp; '
+                    + " &nbsp;·&nbsp; ".join(rows)
+                    + "</div>",
+                    unsafe_allow_html=True,
+                )
     else:
         st.write("Пока нет данных о назначениях. Дождитесь обновления от ATEM.")
     
 else:
-    st.info("Подключитесь к ATEM для начала работы")
-    st.markdown("""
-    ### Инструкция:
-    1. Введите IP адрес вашего ATEM микшера
-    2. Нажмите "Подключиться"
-    3. После подключения вы увидите матрицу роутинга
-    4. Используйте выпадающие списки для изменения роутинга
-    """)
+    st.markdown(
+        """
+        <div class="hero">
+          <h3>Подключитесь к ATEM, чтобы начать</h3>
+          <ol>
+            <li>Введите IP-адрес микшера ATEM (или нажмите «🔍 Найти ATEM в сети»)</li>
+            <li>Нажмите «Подключиться»</li>
+            <li>Появится матрица роутинга: AUX-выходы × стереопары</li>
+            <li>Меняйте источники в выпадающих списках — команды уходят в ATEM</li>
+          </ol>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )

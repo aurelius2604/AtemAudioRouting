@@ -108,6 +108,13 @@ def main() -> None:
         "server.headless": True,
         "browser.gatherUsageStats": False,
         "global.developmentMode": False,
+        # Theme (packaged app does not pick up ./.streamlit/config.toml because
+        # the working dir is the user's Documents folder, so set it explicitly).
+        "theme.base": "dark",
+        "theme.primaryColor": "#38bdf8",
+        "theme.backgroundColor": "#0b0f14",
+        "theme.secondaryBackgroundColor": "#151b23",
+        "theme.textColor": "#e6edf3",
     }
     try:
         logging.info("Starting Streamlit bootstrap")

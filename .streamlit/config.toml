@@ -1,0 +1,11 @@
+# Base Streamlit theme for dev runs (streamlit run atem_gui.py).
+# The packaged .app applies the same theme via launcher.py flag_options.
+[theme]
+base = "dark"
+primaryColor = "#38bdf8"
+backgroundColor = "#0b0f14"
+secondaryBackgroundColor = "#151b23"
+textColor = "#e6edf3"
+
+[browser]
+gatherUsageStats = false
