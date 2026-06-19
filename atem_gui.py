@@ -509,6 +509,11 @@ st.markdown(
     div[data-baseweb="select"] input { font-size: 14px; }
     div[data-baseweb="select"] span { white-space: normal; line-height: 1.2; }
     .pair-label { white-space: nowrap; display: inline-block; margin-left: -10px; color: var(--muted); }
+    .pair-chip {
+        text-align: center; font-variant-numeric: tabular-nums; font-weight: 700;
+        font-size: 13px; color: var(--accent); background: var(--surface-2);
+        border: 1px solid var(--border); border-radius: 8px; padding: 8px 0;
+    }
     </style>
     """,
     unsafe_allow_html=True
@@ -711,14 +716,18 @@ if st.session_state.connected:
         )
         for pair_idx, pair_label in enumerate(PAIR_LABELS, start=1):
             current_source = state.get_route(aux_focus, pair_idx) or 0
-            selected = st.selectbox(
-                f"AUX {aux_focus} • {pair_label}",
-                options=list(source_options.keys()),
-                format_func=lambda x: source_options.get(x, str(x)),
-                index=list(source_options.keys()).index(current_source) if current_source in source_options else 0,
-                key=f"aux_focus_{aux_focus}_pair_{pair_idx}",
-                label_visibility="collapsed"
-            )
+            lab_col, sel_col = st.columns([1, 7], vertical_alignment="center")
+            with lab_col:
+                st.markdown(f'<div class="pair-chip">{pair_label}</div>', unsafe_allow_html=True)
+            with sel_col:
+                selected = st.selectbox(
+                    f"AUX {aux_focus} • {pair_label}",
+                    options=list(source_options.keys()),
+                    format_func=lambda x: source_options.get(x, str(x)),
+                    index=list(source_options.keys()).index(current_source) if current_source in source_options else 0,
+                    key=f"aux_focus_{aux_focus}_pair_{pair_idx}",
+                    label_visibility="collapsed"
+                )
             if selected != current_source:
                 set_routing(aux_focus, pair_idx, selected)
                 time.sleep(0.1)
